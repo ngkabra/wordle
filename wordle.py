@@ -20,7 +20,7 @@ NUMBER_OF_EXPLORE_ROUNDS = 2
 # Thus setting this variable to a large number (i.e. 6 or more)
 # is equivalent to saying that the algorithm should decide
 # when to switch to GUESS mode
-VALID_WORDS_FILE = MYDIR/"unix_words.txt"
+VALID_WORDS_FILE = MYDIR/"linux_words.txt"
 
 
 # The words used by WORDLE are visible in the JavaScript
