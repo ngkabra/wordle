@@ -51,7 +51,7 @@ Other extensions possible:
 
 # Acknowledgements
 
-The wordfreq.txt file is derived from the [count_1w.txt file](http://norvig.com/ngrams/count_1w.txt) from Peter Norvig's "Natural Language Corpus Data: Beautiful Data" page: [Link](http://norvig.com/ngrams/) which is derived from  the Google Web Trillion Word Corpus, as [described](https://ai.googleblog.com/2006/08/all-our-n-gram-are-belong-to-you.html) by Thorsten Brants and Alex Franz, and [distributed](https://catalog.ldc.upenn.edu/LDC2006T13) by the Linguistic Data Consortium.
+The wordfreq.txt file is derived from the [count_1w.txt file](http://norvig.com/ngrams/count_1w.txt) from [Peter Norvig's "Natural Language Corpus Data: Beautiful Data" page](http://norvig.com/ngrams/) which is derived from  the Google Web Trillion Word Corpus, as [described](https://ai.googleblog.com/2006/08/all-our-n-gram-are-belong-to-you.html) by Thorsten Brants and Alex Franz, and [distributed](https://catalog.ldc.upenn.edu/LDC2006T13) by the Linguistic Data Consortium.
 
 # Other Wordle Solvers
 
@@ -61,3 +61,12 @@ Check out these other Wordle solvers
 - [https://github.com/LaurentLessard/wordlesolver]
 - [https://github.com/deedy/wordle-solver]
 
+# License
+
+Public domain. Do what you want with this code.
+
+The code does contain the following word lists which are governed by other licenses:
+
+- `linux_words.txt`: GPL
+- `wordle_words.txt`: Taken from [Wordle's website](https://www.powerlanguage.co.uk/wordle/). Not sure what the license is.
+- `count_1w.txt`: Not sure what the license is. Check [this website](https://ai.googleblog.com/2006/08/all-our-n-gram-are-belong-to-you.html) or [this](https://catalog.ldc.upenn.edu/LDC2006T13).
