@@ -41,6 +41,7 @@ This code was written quickly in a couple of hours, and hence is not very well w
 - The data structures are rather simplistic 
 - The code will probably not work well if a letter appears multiple times in the word. This needs to be fixed
 - Re-write it to work with older versions of Python (because lots of people probably don't have access to 3.10 yet)
+- Implement Hard mode (where you must use `exact_matches` and `included_letters` in each subsequent guess)
 
 Most importantly, the code is not really structured to allow easy experimentation with different configurations and algorithms (via the use of appropriate design patterns)
 
