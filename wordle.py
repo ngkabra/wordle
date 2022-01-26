@@ -1,45 +1,19 @@
 #!/usr/bin/python3
-
+import argparse
 from collections import defaultdict
 from enum import Enum
 import math
 from pathlib import Path
 import re
-from typing import NamedTuple
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-# TODO: These should become commandline options using argparse
 MYDIR = Path(__file__).parent
 WORDFREQ_FILE =  MYDIR/"wordfreq.txt"
-NUMBER_OF_EXPLORE_ROUNDS = 2
-# If there are no candidate words generated in EXPLORE mode
-# the algorithm automatically switches to GUESS mode.
-# Thus setting this variable to a large number (i.e. 6 or more)
-# is equivalent to saying that the algorithm should decide
-# when to switch to GUESS mode
 VALID_WORDS_FILE = MYDIR/"linux_words.txt"
-
-
-# The words used by WORDLE are visible in the JavaScript
-# file used by Wordle. Thus, it is possible to use those
-# words directly. However, I feel that using Wordle's word list
-# is a little bit of cheating. So it is not used by default.
-CHEAT_BY_USING_WORDLE_WORDS = False
-if CHEAT_BY_USING_WORDLE_WORDS:
-    VALID_WORDS_FILE = MYDIR/"wordle_words.txt"
-
-# set this to a small value like 0.1
-# to implement @ainvvy's heuristic of using words
-# with mostly consonants during EXPLORE mode (e.g. MONTH)
-#
-# Or set it to a large value like 20 to
-# implement the opposite heuristic of using
-# words with mostly vowels during EXPLORE mode (e.g. ADIEU) 
-# The default value of 1 gives both equal importance
-VOWEL_MULTIPLIER = 1
+WORDLE_WORDS_FILE = MYDIR/"wordle_words.txt"
 
 
 MODE = Enum("MODE", "EXPLORE GUESS")
@@ -58,7 +32,9 @@ class Wordle:
     places, *all* the included letters are there in the word, and
     none of the disallowed_letters are there.
     '''
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+
         self.mode = MODE.EXPLORE  # start in EXPLORE mode
 
         # exact_matches is just a list of 5 letters
@@ -104,7 +80,11 @@ class Wordle:
         that will give better behavior in our algorithms
         '''
         wordfreqs: dict[str, float] = {}
-        with open(VALID_WORDS_FILE, 'r') as f:
+        WORDS_FILE = VALID_WORDS_FILE
+        if self.config.cheat:
+            WORDS_FILE = WORDLE_WORDS_FILE
+
+        with open(WORDS_FILE, 'r') as f:
             valid_regexp = re.compile(r'^[a-z]{5}$')
             valid_words = set(
                 word
@@ -138,11 +118,11 @@ class Wordle:
         Note: letters from exact_matches
         are also included because they could be repeated
         '''
-        allowed_letters = ''.join(sorted(self.disallowed_letters))
-        if not allowed_letters:
+        disallowed_letters = ''.join(sorted(self.disallowed_letters))
+        if not disallowed_letters:
             allowed_regexp = '[a-z]'
         else:
-            allowed_regexp = f'[^{allowed_letters}]'
+            allowed_regexp = f'[^{disallowed_letters}]'
         all_letters = ''.join(e if e else allowed_regexp
                               for e in self.exact_matches)
         # At this point all_letters will have exactly 5 letters
@@ -198,10 +178,10 @@ class Wordle:
             if regexp.match(word):
                 for letter in word:
                     if self.mode == MODE.EXPLORE and letter in 'aeiou':
-                        # Use VOWEL_MULTIPLIER to decide whether to
-                        # give higher importance to words with Vowels
-                        # (or lower)
-                        freq *= VOWEL_MULTIPLIER
+                        # Use self.config.vowel_multiplier to decide
+                        # whether to give higher importance to words
+                        # with vowels (or lower)
+                        freq *= self.config.vowel_multiplier
                     self.letter_scores[letter] += freq
 
     def word_score_explore(self, word: str) -> float:
@@ -238,7 +218,7 @@ class Wordle:
         '''
         Decide which MODE we want to be in
 
-        If NUMBER_OF_EXPLORE_ROUNDS is set to a small number like
+        If self.config.explore_rounds is set to a small number like
         2 or 3, the algorithm will use only that many rounds
         of EXPLORE and then switch to GUESS
 
@@ -247,11 +227,11 @@ class Wordle:
 
         Note: if in EXPLORE mode the number of candidate words is 0
         then the algorithm automatically switches to GUESS mode.
-        Thus setting NUMBER_OF_EXPLORE_ROUNDS to 6 or more
+        Thus setting self.config.explore_rounds to 6 or more
         is equivalent to saying: EXPLORE for as long as possible
         and then switch to GUESS
         '''
-        if self.guesses >= NUMBER_OF_EXPLORE_ROUNDS:
+        if self.guesses >= self.config.explore_rounds:
             self.mode = MODE.GUESS
         
 
@@ -306,6 +286,9 @@ class Wordle:
 
         Returns None if no eligible word found. 
         '''
+        if self.config.start_word and self.guesses == 0:
+            return self.config.start_word
+
         best_word = (None, 0)
         regexp = self.regexp()
         self.compute_letter_scores(regexp)
@@ -346,5 +329,56 @@ class Wordle:
 
 if __name__ == '__main__':
     logging.basicConfig(format="%(message)s", level=logging.DEBUG)
-    wordle = Wordle()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='log debug messages to stderr')
+    parser.add_argument('-v', '--verbose',
+                        action='store_true',
+                        help='log messages to console')
+
+    parser.add_argument('-H', '--hard-mode',
+                        action='store_true',
+                        help='play in hard mode')
+
+    # Use this word as a starting word
+    # This is for the "wordlechain" mode as described by
+    # @tubelite on Twitter
+    # https://twitter.com/tubelite/status/1486140126040563713
+    parser.add_argument('-s', '--start-word',
+                        help='Use this as a starting word')
+
+    # If there are no candidate words generated in EXPLORE mode
+    # the algorithm automatically switches to GUESS mode.
+    # Thus setting this variable to a large number (i.e. 6 or more)
+    # is equivalent to saying that the algorithm should decide
+    # when to switch to GUESS mode
+    parser.add_argument('-e', '--explore-rounds', default=2, type=int,
+                        help='Number of explore rounds in the beginning')
+
+    # The words used by WORDLE are visible in the JavaScript
+    # file used by Wordle. Thus, it is possible to use those
+    # words directly. However, I feel that using Wordle's word list
+    # is a little bit of cheating. So it is not used by default.
+    parser.add_argument('-c', '--cheat', action='store_true',
+                        help="Cheat using Wordle's word list")
+
+
+    # set this to a small value like 0.1
+    # to implement @ainvvy's heuristic of using words
+    # with mostly consonants during EXPLORE mode (e.g. MONTH)
+    #
+    # Or set it to a large value like 20 to
+    # implement the opposite heuristic of using
+    # words with mostly vowels during EXPLORE mode (e.g. ADIEU) 
+    # The default value of 1 gives both equal importance
+    parser.add_argument('-V', '--vowel-multiplier', 
+                        default=1.0, type=float,
+                        help="Set value of the vowel multiplier")
+
+    args = parser.parse_args()
+
+    # hard mode is same as explore_rounds = 0
+    if args.hard_mode:
+        args.explore_rounds = 0
+    wordle = Wordle(config=args)
     wordle.play()
