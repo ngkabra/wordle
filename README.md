@@ -41,13 +41,11 @@ This code was written quickly in a couple of hours, and hence is not very well w
 - The data structures are rather simplistic 
 - The code will probably not work well if a letter appears multiple times in the word. This needs to be fixed
 - Re-write it to work with older versions of Python (because lots of people probably don't have access to 3.10 yet)
-- Implement Hard mode (where you must use `exact_matches` and `included_letters` in each subsequent guess)
 
 Most importantly, the code is not really structured to allow easy experimentation with different configurations and algorithms (via the use of appropriate design patterns)
 
 Other extensions possible:
 
-- Reverse solver: given someone's wordle output, try to guess their guesses.
 - Algorithm evaluator: for any algorithm, run it through *all* the words in Wordle's wordlist and see how many it solves and what is the average number of steps required
 
 # Acknowledgements
